@@ -1,0 +1,28 @@
+{
+  "name": "project-lighthouse",
+  "version": "1.0.0",
+  "description": "A Firebase-powered web application with authentication and Firestore database",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server . -p 3000 -o",
+    "dev": "npx live-server --port=3000 --open=/index.html",
+    "build": "echo 'No build process needed for this static app'",
+    "serve": "npx http-server . -p 8080"
+  },
+  "keywords": [
+    "firebase",
+    "web-app",
+    "authentication",
+    "firestore",
+    "javascript"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "firebase": "^12.2.1"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.2"
+  }
+}
