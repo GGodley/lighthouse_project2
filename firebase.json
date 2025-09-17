@@ -1,13 +1,14 @@
 {
   "hosting": {
-    "public": ".",
+    "public": "public",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**",
       "**/firestore.rules",
       "**/firestore-example.js",
-      "**/README.md"
+      "**/README.md",
+      "functions/**"
     ],
     "rewrites": [
       {
@@ -26,6 +27,10 @@
         ]
       }
     ]
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs18"
   },
   "firestore": {
     "rules": "firestore.rules"

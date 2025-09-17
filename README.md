@@ -1,12 +1,14 @@
 # Project Lighthouse
 
-A modern Firebase-powered web application with authentication and Firestore database integration.
+A modern Firebase-powered web application with Gmail integration, authentication, and Firestore database.
 
 ## Features
 
-- 🔐 Firebase Authentication (Email/Password)
+- 🔐 Firebase Authentication (Email/Password + Google Sign-in)
+- 📧 Gmail Integration (Read recent emails)
 - 🗄️ Firestore Database integration
-- 🎨 Modern, responsive UI design
+- ☁️ Firebase Cloud Functions (2nd Gen)
+- 🎨 Modern, responsive UI with Tailwind CSS
 - 📱 Mobile-friendly interface
 - ⚡ Fast and lightweight
 
@@ -74,20 +76,32 @@ The app will open in your browser at `http://localhost:3000`
 
 ```
 project-lighthouse/
-├── index.html          # Main HTML file
-├── styles.css          # CSS styles
-├── app.js             # Main application logic
-├── firebase-config.js # Firebase configuration
-├── package.json       # Project dependencies and scripts
-└── README.md         # This file
+├── public/
+│   ├── index.html          # Main HTML with Tailwind CSS
+│   └── app.js             # Client-side JavaScript with Gmail integration
+├── functions/
+│   ├── index.js           # Cloud Functions for Gmail API
+│   └── package.json       # Functions dependencies
+├── firebase.json          # Firebase configuration
+├── .firebaserc           # Firebase project settings
+├── GMAIL_SETUP.md        # Detailed Gmail setup guide
+└── README.md             # This file
 ```
 
 ## Usage
 
+### Basic Authentication
 1. **Sign Up**: Create a new account with email and password
 2. **Sign In**: Use your credentials to access the app
-3. **Dashboard**: Once authenticated, you'll see the main app interface
-4. **Sign Out**: Click the sign out button to log out
+3. **Google Sign-in**: Click "Sign in with Google" for OAuth authentication
+4. **Dashboard**: Once authenticated, you'll see the main app interface
+5. **Sign Out**: Click the sign out button to log out
+
+### Gmail Integration
+1. **Enable Gmail API**: Follow the setup guide in `GMAIL_SETUP.md`
+2. **Sign in with Google**: Grant Gmail read permissions
+3. **View Emails**: Your 5 most recent emails will be displayed
+4. **Real-time Updates**: Emails are fetched and cached in Firestore
 
 ## Firebase Services Used
 

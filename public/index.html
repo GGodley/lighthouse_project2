@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Recent Emails</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .google-icon {
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIyLjU2IDEyLjI1QzIyLjU2IDExLjQ3IDIyLjQ5IDEwLjcyIDIyLjM2IDEwSDEyVjE0LjI2SDE3LjkyQzE3LjY2IDE1LjYzIDE2Ljg4IDE2Ljc5IDE1LjcxIDE3LjU3VjIwLjM0SDE5LjU3QzIxLjY1IDE4LjQyIDIyLjU2IDE1LjUxIDIyLjU2IDEyLjI1WiIgZmlsbD0iIzQyODVGNCIvPgo8cGF0aCBkPSJNMTIgMjNDMTQuOTcgMjMgMTcuNDYgMjIuMDIgMTkuMjggMjAuMzRMMTUuNzEgMTcuNTdDMTQuNzMgMTguMjMgMTMuNDggMTguNjMgMTIgMTguNjNDOS4xNCAxOC42MyA2LjcxIDE2LjcgNS44NCAxNC4wOUgyLjE4VjE2LjkzQzMuOTkgMjAuNTMgNy43IDIzIDEyIDIzWiIgZmlsbD0iIzM0QTg1MyIvPgo8cGF0aCBkPSJNNS44NCAxNC4wOUM1LjYyIDEzLjQzIDUuNDkgMTIuNzMgNS40OSAxMkM1LjQ5IDExLjI3IDUuNjIgMTAuNTcgNS44NCA5LjkxVjcuMDdIMi4xOEMxLjQzIDguNTUgMSAxMC4yMiAxIDEyQzEgMTMuNzggMS40MyAxNS40NSAyLjE4IDE2LjkzTDUuODQgMTQuMDlaIiBmaWxsPSIjRkJCMDUiLz4KPHBhdGggZD0iTTEyIDUuMzhDMTMuNjIgNS4zOCAxNS4wNiA1Ljk0IDE2LjIxIDcuMDJMMTkuMjggMy45NUMxNy40NSAyLjA5IDE0Ljk3IDEgMTIgMUM3LjcgMSAzLjk5IDMuNDcgMi4xOCA3LjA3TDUuODQgOS45M0M2LjcxIDcuMyA5LjE0IDUuMzggMTIgNS4zOFoiIGZpbGw9IiNFQTQzMzUiLz4KPC9zdmc+');
+            background-repeat: no-repeat;
+            background-position: left center;
+            background-size: 20px 20px;
+            padding-left: 30px;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .email-card {
+            transition: all 0.3s ease;
+        }
+        
+        .email-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">My Recent Emails</h1>
+            <p class="text-gray-600">Sign in with Google to view your 5 most recent emails</p>
+        </div>
+
+        <!-- Sign In Section -->
+        <div id="signInSection" class="text-center mb-8">
+            <button 
+                id="signInBtn" 
+                class="google-icon bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 px-6 border border-gray-300 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+                Sign in with Google
+            </button>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="hidden text-center mb-8">
+            <div class="loading-spinner"></div>
+            <p class="text-gray-600 mt-4">Loading your emails...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+            <span id="errorText"></span>
+        </div>
+
+        <!-- Success Message -->
+        <div id="successMessage" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+            <span id="successText"></span>
+        </div>
+
+        <!-- Email List Container -->
+        <div id="emailList" class="space-y-4">
+            <!-- Emails will be dynamically inserted here -->
+        </div>
+
+        <!-- Sign Out Section -->
+        <div id="signOutSection" class="hidden text-center mt-8">
+            <button 
+                id="signOutBtn" 
+                class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+            >
+                Sign Out
+            </button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA9eoASRIi19IE2CjAiNKZKUt5fx4uQk_A",
+            authDomain: "project-lighthouse2-b2bed.firebaseapp.com",
+            projectId: "project-lighthouse2-b2bed",
+            storageBucket: "project-lighthouse2-b2bed.firebasestorage.app",
+            messagingSenderId: "206952722644",
+            appId: "1:206952722644:web:ca6ab3907934b3bc340b41",
+            measurementId: "G-PBPPRHMMTR"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const functions = getFunctions(app);
+        const db = getFirestore(app);
+
+        // Make Firebase services available globally
+        window.auth = auth;
+        window.functions = functions;
+        window.db = db;
+        window.GoogleAuthProvider = GoogleAuthProvider;
+        window.signInWithPopup = signInWithPopup;
+        window.signOut = signOut;
+        window.onAuthStateChanged = onAuthStateChanged;
+        window.httpsCallable = httpsCallable;
+    </script>
+
+    <!-- App Script -->
+    <script src="app.js"></script>
+</body>
+</html>
