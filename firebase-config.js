@@ -2,6 +2,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getFunctions } from 'firebase/functions';
 import { getAnalytics } from 'firebase/analytics';
 
 // Your web app's Firebase configuration
@@ -30,6 +31,9 @@ export const db = getFirestore(app);
 
 // Initialize Analytics (optional)
 export const analytics = getAnalytics(app);
+
+// Initialize Cloud Functions (region: us-central1)
+export const functions = getFunctions(app, 'us-central1');
 
 // Export the app instance
 export default app;

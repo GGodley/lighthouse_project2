@@ -8,6 +8,7 @@ function initializeApp() {
     // DOM Elements
     const signInBtn = document.getElementById('signInBtn');
     const signOutBtn = document.getElementById('signOutBtn');
+    const readInboxBtn = document.getElementById('readInboxBtn');
     const loadingSpinner = document.getElementById('loadingSpinner');
     const emailList = document.getElementById('emailList');
     const signInSection = document.getElementById('signInSection');
@@ -25,6 +26,15 @@ function initializeApp() {
     const signOut = window.signOut;
     const onAuthStateChanged = window.onAuthStateChanged;
     const httpsCallable = window.httpsCallable;
+    let didProcessLogin = false;
+
+    // Checklist helpers
+    function markStep(stepId) {
+        const li = document.getElementById(stepId);
+        if (!li) return;
+        const check = li.querySelector('[data-check]');
+        if (check) check.classList.remove('hidden');
+    }
 
     // Utility functions
     function showError(message) {
@@ -68,64 +78,59 @@ function initializeApp() {
         hideMessages();
     }
 
-    // Sign in with Google function
-    async function signInWithGoogle() {
+    // This function should be called when the user clicks the sign-in button
+    async function signInAndProcess() {
         try {
             hideMessages();
             showLoading();
 
-            // Create Google Auth Provider with Gmail scope
+            // Step 1: Sign in to Firebase first. This gets the user authenticated in our app.
             const provider = new GoogleAuthProvider();
             provider.addScope('https://www.googleapis.com/auth/gmail.readonly');
-
-            // Sign in with popup
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
+            console.log('Step 1: Firebase sign-in successful for user:', user.uid);
+            markStep('step-auth');
 
-            console.log('User signed in:', user);
+            // Step 2: Now, use the GSI library to get the server-side authorization code.
+            const client = google.accounts.oauth2.initCodeClient({
+                client_id: '468882037432-b4bhc6niptt3f2899oq18t7lodvj9sqf.apps.googleusercontent.com',
+                scope: 'https://www.googleapis.com/auth/gmail.readonly',
+                callback: async (response) => {
+                    try {
+                        const code = response?.code;
+                        if (!code) throw new Error('Failed to get authorization code from Google.');
+                        console.log('Step 2: GSI authorization code received.');
+                        markStep('step-gsi');
 
-            // Get the OAuth credential
-            const credential = GoogleAuthProvider.credentialFromResult(result);
-            if (!credential) {
-                throw new Error('No credential returned from Google');
-            }
+                        // Step 3: Call your backend function with the code.
+                        const processUserLogin = httpsCallable(functions, 'processUserLogin');
+                        console.log('Step 3: Calling backend to process tokens...');
+                        await processUserLogin({ authorizationCode: code, uid: user.uid });
+                        didProcessLogin = true;
+                        console.log('Step 4: Backend processing complete.');
+                        markStep('step-backend');
 
-            // Extract the authorization code
-            const authorizationCode = credential.serverAuthCode;
-            if (!authorizationCode) {
-                throw new Error('No authorization code received');
-            }
-
-            console.log('Authorization code received:', authorizationCode);
-
-            // Call the processUserLogin Cloud Function
-            const processUserLogin = httpsCallable(functions, 'processUserLogin');
-            const loginResult = await processUserLogin({
-                authorizationCode: authorizationCode,
-                uid: user.uid
+                        // Step 5: Fetch and display emails.
+                        await fetchAndDisplayEmails();
+                        markStep('step-firestore');
+                        markStep('step-display');
+                    } catch (err) {
+                        console.error('Error in GSI callback:', err);
+                        showError('Failed to complete Google sign-in.');
+                    } finally {
+                        hideLoading();
+                    }
+                },
             });
 
-            console.log('User login processed:', loginResult.data);
-
-            showSuccess('Successfully signed in! Fetching your emails...');
-
-            // Call getUserEmails to fetch and display emails
-            await fetchAndDisplayEmails();
-
+            // Trigger the GSI code request. Because the user just signed in,
+            // this will usually happen silently without a second popup.
+            client.requestCode();
         } catch (error) {
-            console.error('Sign in error:', error);
+            console.error('The sign-in process failed:', error);
             hideLoading();
-            
-            let errorMsg = 'An error occurred during sign in.';
-            if (error.code === 'auth/popup-closed-by-user') {
-                errorMsg = 'Sign in was cancelled.';
-            } else if (error.code === 'auth/popup-blocked') {
-                errorMsg = 'Popup was blocked by browser. Please allow popups.';
-            } else if (error.message) {
-                errorMsg = error.message;
-            }
-            
-            showError(errorMsg);
+            showError('The sign-in process failed. Please try again.');
         }
     }
 
@@ -134,7 +139,7 @@ function initializeApp() {
         try {
             const getUserEmails = httpsCallable(functions, 'getUserEmails');
             const result = await getUserEmails();
-            const emails = result.data;
+            const emails = (result?.data?.emails) || [];
 
             console.log('Emails received:', emails);
 
@@ -215,7 +220,10 @@ function initializeApp() {
     }
 
     // Event listeners
-    signInBtn.addEventListener('click', signInWithGoogle);
+    signInBtn.addEventListener('click', signInAndProcess);
+    if (readInboxBtn) {
+        readInboxBtn.addEventListener('click', signInAndProcess);
+    }
     signOutBtn.addEventListener('click', signOutUser);
 
     // Authentication state listener
@@ -225,20 +233,25 @@ function initializeApp() {
         if (user) {
             // User is signed in
             showSignedInState();
+            if (readInboxBtn) readInboxBtn.disabled = false;
+            markStep('step-auth');
             hideMessages();
             
-            // Try to fetch emails if user is already signed in
-            try {
-                showLoading();
-                await fetchAndDisplayEmails();
-            } catch (error) {
-                console.error('Error fetching emails on auth state change:', error);
-                hideLoading();
-                showError('Failed to load emails. Please sign in again.');
+            // Only auto-fetch if we've already processed login for Gmail tokens
+            if (didProcessLogin) {
+                try {
+                    showLoading();
+                    await fetchAndDisplayEmails();
+                } catch (error) {
+                    console.error('Error fetching emails on auth state change:', error);
+                    hideLoading();
+                    showError('Failed to load emails. Please sign in again.');
+                }
             }
         } else {
             // User is signed out
             showSignedOutState();
+            if (readInboxBtn) readInboxBtn.disabled = true;
         }
     });
 

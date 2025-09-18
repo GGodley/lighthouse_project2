@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Recent Emails</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         .google-icon {
             background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIyLjU2IDEyLjI1QzIyLjU2IDExLjQ3IDIyLjQ5IDEwLjcyIDIyLjM2IDEwSDEyVjE0LjI2SDE3LjkyQzE3LjY2IDE1LjYzIDE2Ljg4IDE2Ljc5IDE1LjcxIDE3LjU3VjIwLjM0SDE5LjU3QzIxLjY1IDE4LjQyIDIyLjU2IDE1LjUxIDIyLjU2IDEyLjI1WiIgZmlsbD0iIzQyODVGNCIvPgo8cGF0aCBkPSJNMTIgMjNDMTQuOTcgMjMgMTcuNDYgMjIuMDIgMTkuMjggMjAuMzRMMTUuNzEgMTcuNTdDMTQuNzMgMTguMjMgMTMuNDggMTguNjMgMTIgMTguNjNDOS4xNCAxOC42MyA2LjcxIDE2LjcgNS44NCAxNC4wOUgyLjE4VjE2LjkzQzMuOTkgMjAuNTMgNy43IDIzIDEyIDIzWiIgZmlsbD0iIzM0QTg1MyIvPgo8cGF0aCBkPSJNNS44NCAxNC4wOUM1LjYyIDEzLjQzIDUuNDkgMTIuNzMgNS40OSAxMkM1LjQ5IDExLjI3IDUuNjIgMTAuNTcgNS44NCA5LjkxVjcuMDdIMi4xOEMxLjQzIDguNTUgMSAxMC4yMiAxIDEyQzEgMTMuNzggMS40MyAxNS40NSAyLjE4IDE2LjkzTDUuODQgMTQuMDlaIiBmaWxsPSIjRkJCMDUiLz4KPHBhdGggZD0iTTEyIDUuMzhDMTMuNjIgNS4zOCAxNS4wNiA1Ljk0IDE2LjIxIDcuMDJMMTkuMjggMy45NUMxNy40NSAyLjA5IDE0Ljk3IDEgMTIgMUM3LjcgMSAzLjk5IDMuNDcgMi4xOCA3LjA3TDUuODQgOS45M0M2LjcxIDcuMyA5LjE0IDUuMzggMTIgNS4zOFoiIGZpbGw9IiNFQTQzMzUiLz4KPC9zdmc+');
@@ -78,8 +80,26 @@
             <!-- Emails will be dynamically inserted here -->
         </div>
 
-        <!-- Sign Out Section -->
-        <div id="signOutSection" class="hidden text-center mt-8">
+        <!-- Progress Checklist -->
+        <div id="progressChecklist" class="mt-10 bg-white rounded-lg shadow p-6 border border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Progress</h2>
+            <ul class="space-y-2 text-gray-700" id="checklistItems">
+                <li id="step-auth" class="flex items-center"><span class="w-6 text-green-600 hidden" data-check>✓</span><span class="ml-2">Signed in to Firebase</span></li>
+                <li id="step-gsi" class="flex items-center"><span class="w-6 text-green-600 hidden" data-check>✓</span><span class="ml-2">Received Google authorization code</span></li>
+                <li id="step-backend" class="flex items-center"><span class="w-6 text-green-600 hidden" data-check>✓</span><span class="ml-2">Backend processed and stored tokens</span></li>
+                <li id="step-firestore" class="flex items-center"><span class="w-6 text-green-600 hidden" data-check>✓</span><span class="ml-2">Emails saved to Firestore</span></li>
+                <li id="step-display" class="flex items-center"><span class="w-6 text-green-600 hidden" data-check>✓</span><span class="ml-2">Displayed 5 most recent emails</span></li>
+            </ul>
+        </div>
+
+        <!-- Signed-in Actions -->
+        <div id="signOutSection" class="hidden text-center mt-8 space-x-3">
+            <button 
+                id="readInboxBtn"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+            >
+                Read Inbox
+            </button>
             <button 
                 id="signOutBtn" 
                 class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
@@ -92,10 +112,10 @@
     <!-- Firebase SDK -->
     <script type="module">
         // Import the functions you need from the SDKs you need
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
-        import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js';
+        import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js';
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -111,7 +131,8 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const functions = getFunctions(app);
+        // Use deployed Functions in us-central1
+        const functions = getFunctions(app, 'us-central1');
         const db = getFirestore(app);
 
         // Make Firebase services available globally
